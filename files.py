@@ -37,11 +37,5 @@ def do_CSV(my_par, my_file, my_brew):
         if j < my_par-1:
             csv_file.write("\n")
         j = j+1
-
-    # k=0
-    # while k < my_par:
-    #     csv_file.write(doc.paragraphs[k].text)
-    #     if k+1 < my_par-1:
-    #        csv_file.write(",")
-    #     k = k+1 
+        
     return print("all done!")
