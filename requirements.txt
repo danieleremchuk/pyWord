@@ -1,0 +1,5 @@
+ConfigObj
+files
+pillow
+pymsgbox
+python-docx
