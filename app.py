@@ -1,12 +1,12 @@
+# app.py - program entry point
 import tkinter as tk
 from tkinter import filedialog, Menu, messagebox, ttk, font as tkfont
 
 from time import sleep
 from PIL import Image, ImageTk
 
-import files, validate, os
-
-global doc, path, progress, progress_txt
+import file
+import os
 
 class DocToCSV(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -20,19 +20,15 @@ class DocToCSV(tk.Tk):
         window.grid_rowconfigure(0, weight=1)
         window.grid_columnconfigure(0, weight=1)
 
-        # menu bar (wip) - maybe link functions here as well? -jh
         menuBar = tk.Menu(self)
-
         fileMenu = tk.Menu(menuBar, tearoff = False)
         fileMenu.add_command(label = 'New File')
         fileMenu.add_command(label = 'Open File...')
         fileMenu.add('separator')
         fileMenu.add_command(label = 'Quit', command = self.destroy)
-
         helpMenu = tk.Menu(menuBar, tearoff = False)
         helpMenu.add_command(label = 'Help')
         helpMenu.add_command(label = 'About')
-
         menuBar.add_cascade(label = 'File', menu = fileMenu)
         menuBar.add_cascade(label = 'Help', menu = helpMenu)
 
@@ -58,13 +54,13 @@ class DocToCSV(tk.Tk):
 
         if "BreweryName" in page_name:
             file_name = doc.get()
-            if not validate.valid_file(file_name):
+            if not file.valid_file(file_name):
                 tk.messagebox.showwarning(title="Please select a file", message="You must select a file before proceeding.")
             else:
                 frame.tkraise()
         if "ConvertFile" in page_name:
             brew_name = entry.get()
-            if not validate.valid_name(brew_name):
+            if not file.valid_name(brew_name):
                 tk.messagebox.showwarning(title="Please enter a name", message="You must select a brewery name before proceeding.")
             else:
                 frame.tkraise()
@@ -236,7 +232,7 @@ class ConvertFile(tk.Frame):
         global entry_txt
 
         my_doc = path
-        my_par = files.do_Doc(my_doc)
+        my_par = file.do_Doc(my_doc)
 
         i = 0
         while i < my_par+1:
@@ -252,14 +248,14 @@ class ConvertFile(tk.Frame):
             self.after(1000)
 
         my_brew = entry_txt
-        files.do_CSV(my_par, my_doc, my_brew)
+        file.do_CSV(my_par, my_doc, my_brew)
 
 if __name__ == "__main__":
     app = DocToCSV()
     app.title("The Brewery Pioneers: CSV Import")
 
     w = 400
-    h = 300
+    h = 350
 
     # get screen width and height
     ws = app.winfo_screenwidth()
