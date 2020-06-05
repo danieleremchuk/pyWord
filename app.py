@@ -1,16 +1,12 @@
+# app.py - program entry point
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import font as tkfont 
-from tkinter import ttk
-from time import sleep
-import files
-import validate
-import os
+from tkinter import filedialog, Menu, messagebox, ttk, font as tkfont
 
-global doc
-global path
-global progress
-global progress_txt
+from time import sleep
+from PIL import Image, ImageTk
+
+import file
+import os
 
 class DocToCSV(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -23,6 +19,20 @@ class DocToCSV(tk.Tk):
         window.pack(side="top", fill="both", expand=True)
         window.grid_rowconfigure(0, weight=1)
         window.grid_columnconfigure(0, weight=1)
+
+        menuBar = tk.Menu(self)
+        fileMenu = tk.Menu(menuBar, tearoff = False)
+        fileMenu.add_command(label = 'New File')
+        fileMenu.add_command(label = 'Open File...')
+        fileMenu.add('separator')
+        fileMenu.add_command(label = 'Quit', command = self.destroy)
+        helpMenu = tk.Menu(menuBar, tearoff = False)
+        helpMenu.add_command(label = 'Help')
+        helpMenu.add_command(label = 'About')
+        menuBar.add_cascade(label = 'File', menu = fileMenu)
+        menuBar.add_cascade(label = 'Help', menu = helpMenu)
+
+        self.config(menu = menuBar)
 
         self.frames = {}
         for F in (MainPage, FindFile, BreweryName, ConvertFile):
@@ -44,44 +54,18 @@ class DocToCSV(tk.Tk):
 
         if "BreweryName" in page_name:
             file_name = doc.get()
-            if not validate.valid_file(file_name):
-                file_msg = validate.valid_file_msg(file_name)
-                file_title = "Please select a file"
-                self.popup_err(file_msg, file_title)
-            else: 
+            if not file.valid_file(file_name):
+                tk.messagebox.showwarning(title="Please select a file", message="You must select a file before proceeding.")
+            else:
                 frame.tkraise()
         if "ConvertFile" in page_name:
             brew_name = entry.get()
-            if not validate.valid_name(brew_name):
-                name_msg = validate.valid_name_msg(brew_name)
-                name_title = "Please enter a name"
-                self.popup_err(name_msg, name_title)
-            else: 
+            if not file.valid_name(brew_name):
+                tk.messagebox.showwarning(title="Please enter a name", message="You must select a brewery name before proceeding.")
+            else:
                 frame.tkraise()
         elif "MainPage" in page_name or "FindFile" in page_name:
             frame.tkraise()
-
-    def popup_err(self, msg, title):
-        wind = tk.Toplevel(self)
-        wind.title(title)
-        wind_msg = tk.Label(wind, text=msg, fg="red", font="Tahoma 12 bold", padx=10, pady=10)
-        wind_msg.pack(side="top")
-        btn_ok = tk.Button(wind, text="OK", command=wind.destroy, padx=10, pady=5)
-        btn_ok.pack(side="bottom", padx=10, pady=10)
-
-        wind_w = 400 
-        wind_h = 100 
-
-        # get screen width and height
-        wind_ws = wind.winfo_screenwidth() 
-        wind_hs = wind.winfo_screenheight() 
-
-        # calculate x and y coordinates for the Tk root window
-        wind_x = (wind_ws/2) - (wind_w/2)
-        wind_y = (wind_hs/2) - (wind_h/2)
-
-        # set the dimensions of the screen and where it is placed
-        wind.geometry('%dx%d+%d+%d' % (wind_w, wind_h, wind_x, wind_y))
 
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -95,8 +79,10 @@ class MainPage(tk.Frame):
         botFrame.pack(side="bottom", fill="both", expand=True)
         midFrame.pack(side="bottom", fill="both", expand=True)
 
-        label_main = tk.Label(topFrame, text="Main Menu", font=controller.title_font)
-        label_main.pack(side="top", fill="x", pady=10)
+        self.logoPath = 'gfx/logo.png'
+        self.logoImg = ImageTk.PhotoImage(Image.open(self.logoPath))
+        self.label_main = tk.Label(topFrame, text="Main Menu", font=controller.title_font, image=self.logoImg)
+        self.label_main.pack(side="top", fill="x", pady=1)
 
         button_next = tk.Button(midFrame, text="Start Converting", command=lambda: controller.show_frame("FindFile"), padx=10, pady=5)
         button_next.pack(side="top", padx=10, pady=10)
@@ -126,11 +112,11 @@ class FindFile(tk.Frame):
         label = tk.Label(topFrame, text="Get Document File", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
 
-        button_find = tk.Button(midFrame, text="Find File", command=self.find_doc, padx=10, pady=5)
-        button_find.pack(side="top", padx=10, pady=10)
+        button_find = tk.Button(topFrame, text="Browse", command=self.find_doc, padx=10, pady=5)
+        button_find.pack(side="left", padx=20, pady=10)
 
-        label_find = tk.Label(midFrame, textvariable=doc)
-        label_find.pack(side="top", padx=10, pady=10)
+        entry_find = tk.Entry(topFrame, textvariable=doc, width=60)
+        entry_find.pack(side="left", padx=10, pady=10)
 
         button_main = tk.Button(midFrame, text="Main Menu", command=self.main_func, padx=10, pady=5)
         button_next = tk.Button(midFrame, text="Next", command=lambda: controller.show_frame("BreweryName"), padx=10, pady=5)
@@ -144,9 +130,9 @@ class FindFile(tk.Frame):
         global doc
         global path
 
-        this_doc = tk.filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("docx files", "*.docx"),("doc files", "*.doc")))
-        my_file = os.path.basename(this_doc)  
-        doc.set(my_file)      
+        this_doc = tk.filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("Microsoft Word (2007 - 365)", "*.docx"),("Legacy Microsoft Word (97-2000)", "*.doc")))
+        my_file = os.path.basename(this_doc)
+        doc.set(my_file)
         path = os.path.abspath(this_doc)
 
     def main_func(self):
@@ -166,24 +152,24 @@ class BreweryName(tk.Frame):
         midFrame = tk.Frame(self)
         botFrame = tk.Frame(self)
 
-        topFrame.pack(side="top", fill="both", expand=True)
+        topFrame.pack(side="top", anchor="center")
         botFrame.pack(side="bottom", fill="both", expand=True)
         midFrame.pack(side="bottom", fill="both", expand=True)
 
         label = tk.Label(topFrame, text="Brewery Name", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)    
-        
-        label_entry = tk.Label(midFrame, text="Enter the Brewery")
-        entry = tk.Entry(midFrame) 
-        label_entry.pack(side="top")
-        entry.pack(side="top")
+        label.pack(side="top", fill="x", pady=10)
+
+        label_entry = tk.Label(topFrame, text="Enter the Brewery Name: ")
+        entry = tk.Entry(topFrame)
+        label_entry.pack(side="left",fill="none", expand=True,padx = 10)
+        entry.pack(side="left", fill="none", expand=True, padx = 10)
 
         button_main = tk.Button(midFrame, text="Main Menu", command=self.main_func, padx=10, pady=5)
-        button_next = tk.Button(midFrame, text="Next", command=self.next_func, padx=10, pady=5)
         button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("FindFile"), padx=10, pady=5)
+        button_next = tk.Button(midFrame, text="Next", command=self.next_func, padx=10, pady=5)
         button_main.pack(side="bottom", padx=10, pady=10)
-        button_next.pack(side="bottom", padx=10, pady=10)
         button_prev.pack(side="bottom", padx=10, pady=10)
+        button_next.pack(side="bottom", padx=10, pady=10)
 
         label_cr = tk.Label(botFrame, text="The Brewery Pioneers, Inc \u00a9", font=controller.footer_font)
         label_cr.pack(side="bottom", padx=10, pady=10)
@@ -222,7 +208,7 @@ class ConvertFile(tk.Frame):
         midFrame.pack(side="bottom", fill="both", expand=True)
 
         label = tk.Label(topFrame, text="Convert File", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)    
+        label.pack(side="top", fill="x", pady=10)
 
         button_find = tk.Button(midFrame, text="Convert File", command=self.start_convert, padx=10, pady=5)
         button_find.pack(side="top", padx=10, pady=10)
@@ -230,7 +216,7 @@ class ConvertFile(tk.Frame):
         progress_pb = ttk.Progressbar(midFrame, orient="horizontal", length=300, mode='determinate', maximum=100, variable=progress)
         progress_text = tk.Label(midFrame, textvariable=progress_txt)
         button_main = tk.Button(midFrame, text="Main Menu", command=lambda: controller.show_frame("MainPage"), padx=10, pady=5)
-        button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("FindFile"), padx=10, pady=5)
+        button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("BreweryName"), padx=10, pady=5)
         button_main.pack(side="bottom", padx=10, pady=10)
         button_prev.pack(side="bottom", padx=10, pady=10)
         progress_text.pack(side="bottom", padx=10, pady=10)
@@ -241,12 +227,12 @@ class ConvertFile(tk.Frame):
 
     def start_convert(self):
         global path
-        global progress 
+        global progress
         global progress_txt
         global entry_txt
 
         my_doc = path
-        my_par = files.do_Doc(my_doc)
+        my_par = file.do_Doc(my_doc)
 
         i = 0
         while i < my_par+1:
@@ -262,18 +248,18 @@ class ConvertFile(tk.Frame):
             self.after(1000)
 
         my_brew = entry_txt
-        files.do_CSV(my_par, my_doc, my_brew)
+        file.do_CSV(my_par, my_doc, my_brew)
 
 if __name__ == "__main__":
     app = DocToCSV()
     app.title("The Brewery Pioneers: CSV Import")
 
-    w = 600 
-    h = 600 
+    w = 400
+    h = 350
 
     # get screen width and height
-    ws = app.winfo_screenwidth() 
-    hs = app.winfo_screenheight() 
+    ws = app.winfo_screenwidth()
+    hs = app.winfo_screenheight()
 
     # calculate x and y coordinates for the Tk root window
     x = (ws/2) - (w/2)
