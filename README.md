@@ -18,7 +18,7 @@ First, you select a Word document to read with the application. Then, you select
 
 I plan to add or enhance the following features (in no particular order):
 
-- CSV file preview
+- ~~CSV file preview~~ >> First iteration complete!
 - Place file in a dedicated directory (separate from application directory)
 - Integrate with the Database for a more direct import process (possibly without using a CSV file).
 - Improve graphics/background/UI
