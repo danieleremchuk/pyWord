@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 
 import file
 import os
+import csv
 
 class DocToCSV(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -35,7 +36,7 @@ class DocToCSV(tk.Tk):
         self.config(menu = menuBar)
 
         self.frames = {}
-        for F in (MainPage, FindFile, BreweryName, ConvertFile):
+        for F in (MainPage, FindFile, BreweryName, ConvertFile, PreviewData):
             page_name = F.__name__
             frame = F(parent=window, controller=self)
             self.frames[page_name] = frame
@@ -64,7 +65,7 @@ class DocToCSV(tk.Tk):
                 tk.messagebox.showwarning(title="Please enter a name", message="You must select a brewery name before proceeding.")
             else:
                 frame.tkraise()
-        elif "MainPage" in page_name or "FindFile" in page_name:
+        elif "MainPage" in page_name or "FindFile" in page_name or "PreviewData" in page_name:
             frame.tkraise()
 
 class MainPage(tk.Frame):
@@ -120,8 +121,8 @@ class FindFile(tk.Frame):
 
         button_main = tk.Button(midFrame, text="Main Menu", command=self.main_func, padx=10, pady=5)
         button_next = tk.Button(midFrame, text="Next", command=lambda: controller.show_frame("BreweryName"), padx=10, pady=5)
-        button_main.pack(side="bottom", padx=10, pady=10)
-        button_next.pack(side="bottom", padx=10, pady=10)
+        button_main.pack(side="bottom", padx=5, pady=5)
+        button_next.pack(side="bottom", padx=5, pady=5)
 
         label_cr = tk.Label(botFrame, text="The Brewery Pioneers, Inc \u00a9", font=controller.footer_font)
         label_cr.pack(side="bottom", padx=10, pady=10)
@@ -167,9 +168,9 @@ class BreweryName(tk.Frame):
         button_main = tk.Button(midFrame, text="Main Menu", command=self.main_func, padx=10, pady=5)
         button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("FindFile"), padx=10, pady=5)
         button_next = tk.Button(midFrame, text="Next", command=self.next_func, padx=10, pady=5)
-        button_main.pack(side="bottom", padx=10, pady=10)
-        button_prev.pack(side="bottom", padx=10, pady=10)
-        button_next.pack(side="bottom", padx=10, pady=10)
+        button_main.pack(side="bottom", padx=5, pady=5)
+        button_prev.pack(side="bottom", padx=5, pady=5)
+        button_next.pack(side="bottom", padx=5, pady=5)
 
         label_cr = tk.Label(botFrame, text="The Brewery Pioneers, Inc \u00a9", font=controller.footer_font)
         label_cr.pack(side="bottom", padx=10, pady=10)
@@ -209,7 +210,6 @@ class ConvertFile(tk.Frame):
 
         label = tk.Label(topFrame, text="Convert File", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
-
         button_find = tk.Button(midFrame, text="Convert File", command=self.start_convert, padx=10, pady=5)
         button_find.pack(side="top", padx=10, pady=10)
 
@@ -217,8 +217,11 @@ class ConvertFile(tk.Frame):
         progress_text = tk.Label(midFrame, textvariable=progress_txt)
         button_main = tk.Button(midFrame, text="Main Menu", command=lambda: controller.show_frame("MainPage"), padx=10, pady=5)
         button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("BreweryName"), padx=10, pady=5)
-        button_main.pack(side="bottom", padx=10, pady=10)
-        button_prev.pack(side="bottom", padx=10, pady=10)
+        button_next = tk.Button(midFrame, text="Next", command=lambda: controller.show_frame("PreviewData"), padx=10, pady=5)
+        button_main.pack(side="bottom", padx=5, pady=5)
+        button_prev.pack(side="bottom", padx=5, pady=5)
+        button_next.pack(side="bottom", padx=5, pady=5)
+
         progress_text.pack(side="bottom", padx=10, pady=10)
         progress_pb.pack(side="bottom", padx=10, pady=10)
 
@@ -245,10 +248,67 @@ class ConvertFile(tk.Frame):
                 progress_txt.set(str_prog)
             i = i+1
             self.update()
-            self.after(1000)
+            #self.after(1000)
 
         my_brew = entry_txt
         file.do_CSV(my_par, my_doc, my_brew)
+
+class PreviewData(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        topFrame = tk.Frame(self)
+        midFrame = tk.Frame(self)
+        botFrame = tk.Frame(self)
+
+        topFrame.pack(side="top", fill="both", expand=True)
+        botFrame.pack(side="bottom", fill="both", expand=True)
+        midFrame.pack(side="bottom", fill="both", expand=True)
+
+        label = tk.Label(topFrame, text="Preview Data", font=controller.title_font)
+        label.pack(side="top", fill="x", pady=10)
+        button_show = tk.Button(midFrame, text="Show Data", command=self.show_data, padx=10, pady=5)
+        button_show.pack(side="top", padx=10, pady=10)
+
+        button_main = tk.Button(midFrame, text="Main Menu", command=lambda: controller.show_frame("MainPage"), padx=10, pady=5)
+        button_prev = tk.Button(midFrame, text="Previous", command=lambda: controller.show_frame("ConvertFile"), padx=10, pady=5)
+        button_main.pack(side="bottom", padx=5, pady=5)
+        button_prev.pack(side="bottom", padx=5, pady=5)
+
+        label_cr = tk.Label(botFrame, text="The Brewery Pioneers, Inc \u00a9", font=controller.footer_font)
+        label_cr.pack(side="bottom", padx=10, pady=10)
+
+    def show_data(self):
+        my_csv = file.csv_preview()
+
+        pws = app.winfo_screenwidth()
+        phs = app.winfo_screenheight()
+        if pws < 1000:
+            pw = 500
+        elif pws >= 1000:
+            pw = 1000
+        ph = 500
+        px = (pws/2) + (pw*2)
+        py = (phs/2) - (ph*2)
+        
+        window = tk.Toplevel(self)
+        window.title("CSV Data to Import")
+        window.geometry('%dx%d+%d+%d' % (pw, ph, px, py))
+
+        with open(my_csv, newline = "") as csvfile:
+            reader = csv.reader(csvfile)
+            rowNum = 0
+            for col in reader:
+                colNum = 0
+                for row in col:
+                    if rowNum == 0:
+                        tbl = tk.Label(window, width=len(row)+2, height=2, text=row, relief=tk.RIDGE, font="Tahoma 14 bold")   
+                    else:
+                        tbl = tk.Label(window, width=len(row)+2, height=2, text=row, relief=tk.RIDGE)
+                    tbl.grid(row=rowNum, column=colNum, sticky="nsew")
+                    colNum += 1
+                rowNum += 1
 
 if __name__ == "__main__":
     app = DocToCSV()
